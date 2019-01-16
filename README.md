@@ -26,3 +26,17 @@ port = 22
 ```
 python3.5 agent.py
 ```
+
+## CHANGELOG
+
+[X] Seek black frame kick FAIL notif
+
+[X] Fix allready existing remote file :
+```
+Uploading RUSH : /home/pi/PiPyDASH/RUSH/FILE2119.MP4 -> /var/www/_DERUSH_CAM/RUSH/
+100%|###############################################################################| 3.94G/3.94G [23:35<00:00, 2.78Mb/s]
+unable to backup :	/home/pi/PiPyDASH/RUSH/FILE2119.MP4
+(<class 'shutil.Error'>, Error("Destination path '/home/pi/PiPyDASH/DERUSH/TODO/FILE2119.MP4' already exists",), <traceback object at 0x737e4698>)
+waiting:	300 seconds
+```
+

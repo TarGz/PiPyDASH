@@ -30,7 +30,7 @@ class PiPyDASH():
 		cprint("   	",'magenta',attrs=['bold'])
 
 
-		version = "0.0.1"
+		version = "0.0.2"
 
 		self.folder_RUSH 	= "/home/pi/PiPyDASH/RUSH/"
 		self.folder_DONE 	= "/home/pi/PiPyDASH/DERUSH/DONE/"
@@ -41,6 +41,8 @@ class PiPyDASH():
 		self.camera_PATH  = "/mnt/usbstorage/DCIM/100MEDIA/" 
 		self.storage_PATH  = "/home/pi/PiPyDASH/RUSH/"
 		self.remote_PATH  = "/var/www/_DERUSH_CAM/"
+
+
 
 
 		if not os.path.exists(self.folder_RUSH):
@@ -71,7 +73,7 @@ class PiPyDASH():
 		init(poTOKEN)
 		self.po = Client(poUSER_KEY, api_token=poTOKEN)
 
-		
+		self.hagThings	 	= True; # Startup message
 
 		try:
 			while True:
@@ -79,6 +81,7 @@ class PiPyDASH():
 				self.hasRushFILE 	= False;
 				self.hasNewFILE 	= False;
 				self.hasToDoFILE 	= False;
+				
 
 				self.cameraFILE 	= glob.glob(self.camera_PATH+"*.MP4")
 				self.rushFILE 		= glob.glob(self.folder_RUSH+"*.MP4")
@@ -106,8 +109,8 @@ class PiPyDASH():
 
 				# BACKUP
 				if (self.hasCameraFILE):
+					self.hagThings	 	= True;
 					print ("\nTASK : " + colored("Backuping camera "+ self.cameraFILE[0], 'green'))
-					
 					self.backupVideo(self.cameraFILE[0])
 
 				# UPLOAD RUSH
@@ -124,7 +127,11 @@ class PiPyDASH():
 				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasToDoFILE == False and  self.hasNewFILE == True):
 					print ("\nTASK : " + colored("Upload report", 'green'))
 					self.uploadREPORT(self.newFILE[0],self.remote_PATH+"NEW/")
-
+				else:
+					if(self.hagThings):
+						self.hagThings	 	= False;
+						print ("\nTASK : " + colored("Waiting for camera", 'green'))
+						self.pushLog("TASK Waiting for camera","Raspberry is waiting fo a camera to be connected")
 
 
 		except KeyboardInterrupt:
@@ -174,7 +181,8 @@ class PiPyDASH():
 		dest = os.path.basename(source)
 		file_allready_there = _self.storage_PATH+dest
 		if(os.path.isfile(file_allready_there)):
-			print("file allready exist deleting it: "+ colored(file_allready_there, "red"))
+			print("BACKUP file allready exist deleting it: "+ colored(file_allready_there, "red"))
+			_self.pushLog("Backup allready there, removing ", dest)
 			os.remove(file_allready_there)
 		
 
@@ -217,7 +225,13 @@ class PiPyDASH():
 			transport.close()
 			pbar.close()
 
-			shutil.move(source,_self.folder_TODO)
+			# If exist ( due to a prior backup fail)
+			file_allready_there = _self.folder_TODO+dest
+			if(os.path.isfile(file_allready_there)):
+				print("RUSH file allready exist deleting it: "+ colored(file_allready_there, "red"))
+				os.remove(file_allready_there)
+				_self.pushLog("Backup allready there, removing ", dest)
+				shutil.move(source,_self.folder_TODO)
 
 
 			_self.po.send_message("upload RUSH done: " + dest, title="Upload done:"+dest,sound="bike")
@@ -328,7 +342,7 @@ class PiPyDASH():
 				print(" ")
 				os.chdir(self.folder_NEW)
 				try:
-					self.pushLog("Saving REPORT", new_filename)
+					self.pushLog("MAJORITY REPORT", new_filename)
 					subprocess.check_output([ 'ffmpeg','-ss',begin_time,'-i',videofile,'-to','0:01:00','-c','copy',new_filename],stderr=subprocess.STDOUT)
 				except subprocess.CalledProcessError:
 					e = sys.exc_info()
@@ -341,7 +355,7 @@ class PiPyDASH():
 		else:
 			print(" ")
 			print("Reckon as a   %s" % colored("minority repport", 'red'))
-			self.pushLog("FAIL Seeking FRAME", filename,"siren")
+			self.pushLog("MINORITY REPORT", filename,"siren")
 		
 		os.remove(videofile)
 
