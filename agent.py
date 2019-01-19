@@ -199,7 +199,7 @@ class PiPyDASH():
 			print("unable to backup :	" + colored(source, 'white',  'on_red'))
 			print(colored(e, 'white',  'on_red'))
 			print("waiting:	" + colored(str(_self.failetimeout)+" seconds\n", 'magenta'))
-			_self.pushLog("FAIL Backuping camera", filename,"siren")
+			_self.pushLog("FAIL Backuping camera" + filename,e ,"siren")
 			time.sleep(_self.failetimeout)
 
 
@@ -231,7 +231,8 @@ class PiPyDASH():
 				print("RUSH file allready exist deleting it: "+ colored(file_allready_there, "red"))
 				os.remove(file_allready_there)
 				_self.pushLog("Backup allready there, removing ", dest)
-				shutil.move(source,_self.folder_TODO)
+
+			shutil.move(source,_self.folder_TODO)
 
 
 			_self.po.send_message("upload RUSH done: " + dest, title="Upload done:"+dest,sound="bike")
