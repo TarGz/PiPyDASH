@@ -30,7 +30,7 @@ class PiPyDASH():
 		cprint("   	",'magenta',attrs=['bold'])
 
 
-		version = "0.0.2"
+		version = "0.0.3"
 
 		self.folder_RUSH 	= "/home/pi/PiPyDASH/RUSH/"
 		self.folder_DONE 	= "/home/pi/PiPyDASH/DERUSH/DONE/"
