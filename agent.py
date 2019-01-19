@@ -30,17 +30,17 @@ class PiPyDASH():
 		cprint("   	",'magenta',attrs=['bold'])
 
 
-		version = "0.0.3"
+		version = "0.1.0"
 
-		self.folder_RUSH 	= "/home/pi/PiPyDASH/RUSH/"
-		self.folder_DONE 	= "/home/pi/PiPyDASH/DERUSH/DONE/"
-		self.folder_TODO 	= "/home/pi/PiPyDASH/DERUSH/TODO/"
-		self.folder_ERROR 	= "/home/pi/PiPyDASH/DERUSH/ERROR/"
-		self.folder_NEW 	= "/home/pi/PiPyDASH/DERUSH/NEW/"
-		
 		self.camera_PATH  = "/mnt/usbstorage/DCIM/100MEDIA/" 
-		self.storage_PATH  = "/home/pi/PiPyDASH/RUSH/"
 		self.remote_PATH  = "/var/www/_DERUSH_CAM/"
+		self.folder_RUSH  = "/home/pi/PiPyDASH/STORAGE/"
+		self.folder_TODO 	= "/home/pi/PiPyDASH/TODO/"
+		self.folder_DONE 	= "/home/pi/PiPyDASH/DONE/"
+		self.folder_ERROR 	= "/home/pi/PiPyDASH/ERROR/"
+		self.folder_NEW 	= "/home/pi/PiPyDASH/NEW/"
+		
+
 
 
 
@@ -49,6 +49,8 @@ class PiPyDASH():
 			os.makedirs(self.folder_RUSH)
 		if not os.path.exists(self.folder_TODO):
 			os.makedirs(self.folder_TODO)
+		if not os.path.exists(self.folder_DONE):
+			os.makedirs(self.folder_DONE)
 		if not os.path.exists(self.folder_ERROR):
 			os.makedirs(self.folder_ERROR)
 		if not os.path.exists(self.folder_NEW):
@@ -61,10 +63,9 @@ class PiPyDASH():
 		print("remote_PATH 	: " + colored(self.remote_PATH, 'magenta'))
 		print("folder_RUSH 	: " + colored(self.folder_RUSH, 'magenta'))
 		print("folder_DONE 	: " + colored(self.folder_DONE, 'magenta'))
-		print("folder_TODO 	: " + colored(self.folder_TODO, 'magenta'))
-		print("folder_ERROR : " + colored(self.folder_ERROR, 'magenta'))
 		print("folder_NEW 	: " + colored(self.folder_NEW, 'magenta'))
-		print("folder_DONE 	: " + colored(self.folder_DONE, 'magenta'))
+		print("folder_ERROR : " + colored(self.folder_ERROR, 'magenta'))
+
 
 
 
@@ -80,26 +81,26 @@ class PiPyDASH():
 				self.hasCameraFILE 	= False;
 				self.hasRushFILE 	= False;
 				self.hasNewFILE 	= False;
-				self.hasToDoFILE 	= False;
+				self.hasDoneFILE 	= False;
 				
 
 				self.cameraFILE 	= glob.glob(self.camera_PATH+"*.MP4")
 				self.rushFILE 		= glob.glob(self.folder_RUSH+"*.MP4")
-				self.toDoFILE		= glob.glob(self.folder_TODO+"*.MP4")
+				self.doneFILE		= glob.glob(self.folder_DONE+"*.MP4")
 				self.newFILE		= glob.glob(self.folder_NEW+"*.MP4")
 
 				if(len(self.cameraFILE) > 0):
 					self.hasCameraFILE 	= True;
 				if(len(self.rushFILE) > 0):
 					self.hasRushFILE 	= True;
-				if(len(self.toDoFILE) > 0):
-					self.hasToDoFILE 	= True;
+				if(len(self.doneFILE) > 0):
+					self.hasDoneFILE 	= True;
 				if(len(self.newFILE) > 0):
 					self.hasNewFILE 	= True;
 
 				# print("self.hasCameraFILE " + str(self.hasCameraFILE))
 				# print("self.hasRushFILE " + str(self.hasRushFILE))
-				# print("self.hasToDoFILE " + str(self.hasToDoFILE))
+				# print("self.hasDoneFILE " + str(self.hasDoneFILE))
 				# print("self.hasNewFILE " + str(self.hasNewFILE))
 				
 				
@@ -113,20 +114,29 @@ class PiPyDASH():
 					print ("\nTASK : " + colored("Backuping camera "+ self.cameraFILE[0], 'green'))
 					self.backupVideo(self.cameraFILE[0])
 
+				# UPLOAD NEW
+				elif (self.hasCameraFILE == False and self.hasNewFILE == True):
+					print ("\nTASK : " + colored("Upload report", 'green'))
+					self.uploadREPORT(self.newFILE[0],self.remote_PATH+"NEW/")
+
+				# SEEK BLACK FRAME
+				elif (self.hasCameraFILE == False and  self.hasRushFILE == True ):
+					print ("\nTASK : " + colored("Seek black frame", 'green'))
+					vid = self.rushFILE[0];
+					file = os.path.basename(vid)
+					videoID, file_extension = os.path.splitext(file)
+					report = self.seekBlackFrame(vid)
+					print("majoritaireREPORT", report);
+					dest = self.folder_DONE+videoID+"-"+report+file_extension
+					print("dest", str(dest));
+					shutil.move(vid,dest)
+
+
 				# UPLOAD RUSH
-				elif (self.hasCameraFILE == False and  self.hasRushFILE == True):
+				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasNewFILE == False and  self.hasDoneFILE == True):
 					print ("\nTASK : " + colored("Uploading rush", 'green'))
 					self.uploadRUSH(self.rushFILE[0],self.remote_PATH+"RUSH/")
 
-				#  SEEK BLACK FRAME
-				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasToDoFILE == True):
-					print ("\nTASK : " + colored("Seek black frame", 'green'))
-					self.seekBlackFrame(self.toDoFILE[0])
-
-				# UPLOAD NEW
-				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasToDoFILE == False and  self.hasNewFILE == True):
-					print ("\nTASK : " + colored("Upload report", 'green'))
-					self.uploadREPORT(self.newFILE[0],self.remote_PATH+"NEW/")
 				else:
 					if(self.hagThings):
 						self.hagThings	 	= False;
@@ -179,7 +189,7 @@ class PiPyDASH():
 		# 		os.remove(entry)
 		# If the same file allready is this should be a previous fail copy
 		dest = os.path.basename(source)
-		file_allready_there = _self.storage_PATH+dest
+		file_allready_there = _self.folder_RUSH+dest
 		if(os.path.isfile(file_allready_there)):
 			print("BACKUP file allready exist deleting it: "+ colored(file_allready_there, "red"))
 			_self.pushLog("Backup allready there, removing ", dest)
@@ -192,7 +202,7 @@ class PiPyDASH():
 
 
 		try:
-			shutil.move(source,_self.storage_PATH)
+			shutil.move(source,_self.folder_RUSH)
 
 		except:
 			e = sys.exc_info()
@@ -291,7 +301,7 @@ class PiPyDASH():
 		sequences=[]
 		i=0
 		blackframe=0
-		report="minoritaire"
+		report="MIN"
 
 		for frame in clip.iter_frames(fps,dtype=int,progress_bar=True):
 			i = i + 1
@@ -306,7 +316,7 @@ class PiPyDASH():
 				
 				if(blackframe>0):
 					blackframe=0
-					report="majoritaire"
+					report="MAJ"
 					clipbegin = t-cduration-gap
 					if(clipbegin < 0): clipbegin = 2
 
@@ -350,15 +360,16 @@ class PiPyDASH():
 					print("Error  :	" + colored( str(len(e)), 'red', attrs=['reverse']) )
 					self.pushLog("FAIL Saving REPORT", new_filename , "siren")
 					print ("\nUnable to ffmpeg : "+videofile+"\n !")	
-
+			return report
 					
 
 		else:
 			print(" ")
 			print("Reckon as a   %s" % colored("minority repport", 'red'))
-			self.pushLog("MINORITY REPORT", filename,"siren")
+			self.pushLog("MINORITY REPORT", filename)
+			return report
 		
-		os.remove(videofile)
+		# os.remove(videofile)
 
 
 
