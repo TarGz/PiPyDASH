@@ -135,7 +135,7 @@ class PiPyDASH():
 				# UPLOAD RUSH
 				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasNewFILE == False and  self.hasDoneFILE == True):
 					print ("\nTASK : " + colored("Uploading rush", 'green'))
-					self.uploadRUSH(self.rushFILE[0],self.remote_PATH+"RUSH/")
+					self.uploadRUSH(self.doneFILE[0],self.remote_PATH+"RUSH/")
 
 				else:
 					if(self.hagThings):
