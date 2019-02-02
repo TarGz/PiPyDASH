@@ -1,4 +1,15 @@
 
+# /etc/init.d/PiPyDASH.py
+### BEGIN INIT INFO
+# Provides:          sample.py
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start daemon at boot time
+# Description:       Enable service provided by daemon.
+### END INIT INFO
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from moviepy.editor import VideoFileClip, ImageClip
@@ -17,6 +28,7 @@ import shutil
 import subprocess
 from secret_pass import *
 import sys
+import logging
 
 class PiPyDASH():
 	def __init__(self):
@@ -31,6 +43,10 @@ class PiPyDASH():
 
 
 		version = "0.1.0"
+
+		logging.basicConfig(filename='/home/pi/PiPyDASH/debug.log',level=logging.WARNING)
+		logging.info('Starting PiPyDASH')
+
 
 		self.camera_PATH  = "/mnt/usbstorage/DCIM/100MEDIA/" 
 		self.remote_PATH  = "/var/www/_DERUSH_CAM/"
@@ -47,14 +63,19 @@ class PiPyDASH():
 
 		if not os.path.exists(self.folder_RUSH):
 			os.makedirs(self.folder_RUSH)
+			logging.info('Creating missing folder %s', self.folder_RUSH) 
 		if not os.path.exists(self.folder_TODO):
 			os.makedirs(self.folder_TODO)
+			logging.info('Creating missing folder %s', self.folder_TODO) 
 		if not os.path.exists(self.folder_DONE):
 			os.makedirs(self.folder_DONE)
+			logging.info('Creating missing folder %s', self.folder_DONE) 
 		if not os.path.exists(self.folder_ERROR):
 			os.makedirs(self.folder_ERROR)
+			logging.info('Creating missing folder %s', self.folder_ERROR) 
 		if not os.path.exists(self.folder_NEW):
 			os.makedirs(self.folder_NEW)
+			logging.info('Creating missing folder %s', self.folder_NEW) 
 
 
 
@@ -93,6 +114,8 @@ class PiPyDASH():
 				
 
 
+
+
 				if(len(self.thmFILE) > 0):
 					self.hasthmFILE 	= True;
 				if(len(self.cameraFILE) > 0):
@@ -104,12 +127,18 @@ class PiPyDASH():
 				if(len(self.newFILE) > 0):
 					self.hasNewFILE 	= True;
 
-
+				logging.debug('self.hasthmFILE :  %s', self.hasthmFILE) 
+				logging.debug('self.hasCameraFILE :  %s', self.hasCameraFILE) 
+				logging.debug('self.hasRushFILE :  %s', self.hasRushFILE) 
+				logging.debug('self.hasDoneFILE :  %s', self.hasDoneFILE) 
+				logging.debug('self.hasDoneFILE :  %s', self.hasDoneFILE) 
+				logging.debug('self.hasNewFILE :  %s', self.hasNewFILE) 
 
 									
 				# Clean THM
 				if (self.hasthmFILE):
-					print ("\nTASK : " + colored("Cleaning THM "+ self.cameraFILE[0], 'green'))
+					print ("\nTASK : " + colored("Cleaning THM "+ self.thmFILE[0], 'green'))
+					logging.info('Cleaning THM %s', self.thmFILE[0]) 
 					for entry in self.thmFILE:
 						os.remove(entry)
 
@@ -117,21 +146,25 @@ class PiPyDASH():
 				if (self.hasCameraFILE):
 					self.hadThings	 	= True;
 					print ("\nTASK : " + colored("Backuping camera "+ self.cameraFILE[0], 'green'))
+					logging.info('Backuping camera %s', self.cameraFILE[0]) 
 					self.backupCamera(self.cameraFILE[0])
 
 				# UPLOAD NEW
 				elif (self.hasCameraFILE == False and self.hasNewFILE == True):
 					print ("\nTASK : " + colored("Upload report", 'green'))
+					logging.info('Uploading repport %s', self.newFILE[0]) 
 					self.uploadREPORT(self.newFILE[0],self.remote_PATH+"NEW/")
 
 				# SEEK BLACK FRAME
 				elif (self.hasCameraFILE == False and  self.hasRushFILE == True ):
 					print ("\nTASK : " + colored("Seek black frame", 'green'))
+					logging.info('Seek black frame') 
 					vid = self.rushFILE[0];
 					file = os.path.basename(vid)
 					videoID, file_extension = os.path.splitext(file)
 					report = self.seekBlackFrame(vid)
 					print("majoritaireREPORT", report);
+					logging.info('report  %s', report) 
 					dest = self.folder_DONE+videoID+"-"+report+file_extension
 					print("dest", str(dest));
 					shutil.move(vid,dest)
@@ -139,6 +172,7 @@ class PiPyDASH():
 
 				# UPLOAD RUSH
 				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasNewFILE == False and  self.hasDoneFILE == True):
+					logging.info('Uploading rush  %s', self.doneFILE[0]) 
 					print ("\nTASK : " + colored("Uploading rush", 'green'))
 					self.uploadRUSH(self.doneFILE[0],self.remote_PATH+"RUSH/")
 
@@ -146,6 +180,7 @@ class PiPyDASH():
 					if(self.hadThings):
 						self.hadThings	 	= False;
 						print ("\nTASK : " + colored("Waiting for camera", 'green'))
+						logging.info('Waiting for camera') 
 						self.pushLog("TASK Waiting for camera","Raspberry is waiting fo a camera to be connected")
 
 		except KeyboardInterrupt:
@@ -236,14 +271,7 @@ class PiPyDASH():
 			transport.close()
 			pbar.close()
 
-			# If exist ( due to a prior backup fail)
-			file_allready_there = _self.folder_TODO+dest
-			if(os.path.isfile(file_allready_there)):
-				print("RUSH file allready exist deleting it: "+ colored(file_allready_there, "red"))
-				os.remove(file_allready_there)
-				_self.pushLog("Backup allready there, removing ", dest)
-
-			shutil.move(source,_self.folder_TODO)
+			os.remove(source)
 
 
 			_self.po.send_message("upload RUSH done: " + dest, title="Upload done:"+dest,sound="bike")
@@ -303,75 +331,89 @@ class PiPyDASH():
 		i=0
 		blackframe=0
 		report="MIN"
+		try:
 
-		for frame in clip.iter_frames(fps,dtype=int,progress_bar=True):
-			i = i + 1
-			red = frame[400,:,0].max();
-			green = frame[400,:,1].max();
-			blue = frame[400,:,2].max();
-			average=int((red+green+blue)/3)
-			t = i / fps
-			timestamp = str(datetime.timedelta(seconds=t))
+			for frame in clip.iter_frames(fps,dtype=int,progress_bar=True):
+				i = i + 1
+				red = frame[400,:,0].max();
+				green = frame[400,:,1].max();
+				blue = frame[400,:,2].max();
+				average=int((red+green+blue)/3)
+				t = i / fps
+				timestamp = str(datetime.timedelta(seconds=t))
 
-			if(average>0):
-				
-				if(blackframe>0):
-					blackframe=0
-					report="MAJ"
-					clipbegin = t-cduration-gap
-					if(clipbegin < 0): clipbegin = 2
-
-					if(len(sequences)>0) : # Avoiding overlap 
-						pre_end_time = (sequences[len(sequences)-1][1])
-						begin_time = datetime.timedelta(seconds=clipbegin)
-						if(begin_time < pre_end_time):
-							clipbegin = pre_end_time # TODO : Add gap  
-					clipend = t-(gap*2)
-
-					begin_time = datetime.timedelta(seconds=clipbegin)
-					end_time = datetime.timedelta(seconds=clipend)
-					sequences.append([(begin_time),(end_time)])
-
-			elif(average == 0): # DETECTING BLACK FRAME
-				blackframe=blackframe+1
-				
-		# bar.finish()
-		
-		if(len(sequences)>0):
-			print(" ")
-			print("Sequences founds")
-			print(sequences)
-			print("I founded %s" % colored( str(len(sequences))+" majority repport", 'red') )
-			filename = os.path.basename(videofile)
-			for seq in sequences:
-				begin_time 		= str(seq[0])
-				end_time 		= str(seq[1])
-				print("begin_time",begin_time)
-				print("end_time",end_time)
-				new_filename 	= "%s%s-%s->%s.MP4" % (self.folder_NEW,filename,begin_time.replace(":", "-"),end_time.replace(":", "-"))
-				# FFMEPG
-				print("Exporting video to  :  %s" % colored("%s-%s->%s.MP4" % (filename,begin_time.replace(":", "-"),end_time.replace(":", "-")), 'green'))
-				print(" ")
-				os.chdir(self.folder_NEW)
-				try:
-					self.pushLog("MAJORITY REPORT", new_filename)
-					subprocess.check_output([ 'ffmpeg','-ss',begin_time,'-i',videofile,'-to','0:01:00','-c','copy',new_filename],stderr=subprocess.STDOUT)
-				except subprocess.CalledProcessError:
-					e = sys.exc_info()
-					print("Error  :	" + colored( str(len(e)), 'red', attrs=['reverse']) )
-					self.pushLog("FAIL Saving REPORT", new_filename , "siren")
-					print ("\nUnable to ffmpeg : "+videofile+"\n !")	
-			return report
+				if(average>0):
 					
+					if(blackframe>0):
+						blackframe=0
+						report="MAJ"
+						print("MAJORITAIRE DETECTED");
+						clipbegin = t-cduration-gap
+						if(clipbegin < 0): clipbegin = 2
+						print("clipbegin",clipbegin);
+						if(len(sequences)>0) : # Avoiding overlap 
+							pre_end_time = (sequences[len(sequences)-1][1])
+							print("pre_end_time",pre_end_time)
+							begin_time = datetime.timedelta(seconds=clipbegin)
+							print("begin_time",begin_time)
+							if(begin_time < pre_end_time):
+								clipbegin = pre_end_time # TODO : Add gap  
+								print("rewrite clipbegin",clipbegin)
+						clipend = t-(gap*2)
+						print("clipend",clipend)
 
-		else:
-			print(" ")
-			print("Reckon as a   %s" % colored("minority repport", 'red'))
-			self.pushLog("MINORITY REPORT", filename)
-			return report
+
+						begin_time = datetime.timedelta(seconds=clipbegin)
+						print("begin_time2",begin_time)
+						end_time = datetime.timedelta(seconds=clipend)
+						print("end_time2",end_time)
+						sequences.append([(begin_time),(end_time)])
+
+				elif(average == 0): # DETECTING BLACK FRAME
+					blackframe=blackframe+1
+					
+			# bar.finish()
+			
+			if(len(sequences)>0):
+				print(" ")
+				print("Sequences founds")
+				print(sequences)
+				print("I founded %s" % colored( str(len(sequences))+" majority repport", 'red') )
+				filename = os.path.basename(videofile)
+				for seq in sequences:
+					begin_time 		= str(seq[0])
+					end_time 		= str(seq[1])
+					print("begin_time",begin_time)
+					print("end_time",end_time)
+					new_filename 	= "%s%s-%s->%s.MP4" % (self.folder_NEW,filename,begin_time.replace(":", "-"),end_time.replace(":", "-"))
+					# FFMEPG
+					print("Exporting video to  :  %s" % colored("%s-%s->%s.MP4" % (filename,begin_time.replace(":", "-"),end_time.replace(":", "-")), 'green'))
+					print(" ")
+					os.chdir(self.folder_NEW)
+					try:
+						self.pushLog("MAJORITY REPORT", new_filename)
+						subprocess.check_output([ 'ffmpeg','-ss',begin_time,'-i',videofile,'-to','0:01:00','-c','copy',new_filename],stderr=subprocess.STDOUT)
+					except subprocess.CalledProcessError:
+						e = sys.exc_info()
+						print("Error  :	" + colored( str(len(e)), 'red', attrs=['reverse']) )
+						self.pushLog("FAIL Saving REPORT", new_filename , "siren")
+						print ("\nUnable to ffmpeg : "+videofile+"\n !")	
+				return report
+						
+
+			else:
+				print(" ")
+				print("Reckon as a   %s" % colored("minority repport", 'red'))
+				self.pushLog("MINORITY REPORT", filename)
+				return report
 		
-		# os.remove(videofile)
-
+		except:
+			e = sys.exc_info()
+			print("unable to seekblack frame :	" + colored(filename, 'white',  'on_red'))
+			print(colored(e, 'white',  'on_red'))
+			print("waiting:	" + colored(str(self.failetimeout)+" seconds\n", 'magenta'))
+			self.pushLog("FAIL seekblack frame "+filename, str(e) ,"siren")
+			time.sleep(self.failetimeout)
 
 
 os.system('cls' if os.name == 'nt' else 'clear')
