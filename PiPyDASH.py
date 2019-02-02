@@ -26,7 +26,7 @@ import datetime
 from termcolor import colored, cprint
 import shutil
 import subprocess
-from secret_pass import *
+# from secret_pass import *
 import sys
 import logging
 
@@ -42,22 +42,21 @@ class PiPyDASH():
 		cprint("   	",'magenta',attrs=['bold'])
 
 
-		version = "0.1.0"
+		version = "0.1.1"
 
-		logging.basicConfig(filename='/home/pi/PiPyDASH/debug.log',level=logging.WARNING)
+		logging.basicConfig(filename='/var/PiPyDASH/debug.log',level=logging.WARNING)
 		logging.info('Starting PiPyDASH')
 
 
-		self.camera_PATH  = "/mnt/usbstorage/DCIM/100MEDIA/" 
-		self.remote_PATH  = "/var/www/_DERUSH_CAM/"
-		self.folder_RUSH  = "/home/pi/PiPyDASH/STORAGE/"
-		self.folder_TODO 	= "/home/pi/PiPyDASH/TODO/"
-		self.folder_DONE 	= "/home/pi/PiPyDASH/DONE/"
-		self.folder_ERROR 	= "/home/pi/PiPyDASH/ERROR/"
-		self.folder_NEW 	= "/home/pi/PiPyDASH/NEW/"
+		self.folder_RUSH  = "/var/PiPyDASH/STORAGE/"
+		self.folder_TODO 	= "/var/PiPyDASH/TODO/"
+		self.folder_DONE 	= "/var/PiPyDASH/DONE/"
+		self.folder_ERROR 	= "/var/PiPyDASH/ERROR/"
+		self.folder_NEW 	= "/var/PiPyDASH/NEW/"
 		
 
-
+		poTOKEN = "aw6mfguztvs6irod2k2o8yxqpuwkjx"
+		poUSER_KEY = "gtwbip1rrtuduivghs14gw1s93ezee"
 
 
 
@@ -80,8 +79,6 @@ class PiPyDASH():
 
 
 		print("PiPyDASH 	: " + colored(version, 'magenta'))
-		print("camera_PATH 	: " + colored(self.camera_PATH, 'magenta'))
-		print("remote_PATH 	: " + colored(self.remote_PATH, 'magenta'))
 		print("folder_RUSH 	: " + colored(self.folder_RUSH, 'magenta'))
 		print("folder_DONE 	: " + colored(self.folder_DONE, 'magenta'))
 		print("folder_NEW 	: " + colored(self.folder_NEW, 'magenta'))
@@ -99,64 +96,18 @@ class PiPyDASH():
 
 		try:
 			while True:
-				self.hasCameraFILE 	= False;
-				self.hasthmFILE 	= False;
+
+
 				self.hasRushFILE 	= False;
-				self.hasNewFILE 	= False;
-				self.hasDoneFILE 	= False;
-				
-
-				self.cameraFILE 	= glob.glob(self.camera_PATH+"*.MP4")
-				self.thmFILE 		= glob.glob(self.camera_PATH+"*.THM")
 				self.rushFILE 		= glob.glob(self.folder_RUSH+"*.MP4")
-				self.doneFILE		= glob.glob(self.folder_DONE+"*.MP4")
-				self.newFILE		= glob.glob(self.folder_NEW+"*.MP4")
-				
-
-
-
-
-				if(len(self.thmFILE) > 0):
-					self.hasthmFILE 	= True;
-				if(len(self.cameraFILE) > 0):
-					self.hasCameraFILE 	= True;
 				if(len(self.rushFILE) > 0):
 					self.hasRushFILE 	= True;
-				if(len(self.doneFILE) > 0):
-					self.hasDoneFILE 	= True;
-				if(len(self.newFILE) > 0):
-					self.hasNewFILE 	= True;
 
-				logging.debug('self.hasthmFILE :  %s', self.hasthmFILE) 
-				logging.debug('self.hasCameraFILE :  %s', self.hasCameraFILE) 
-				logging.debug('self.hasRushFILE :  %s', self.hasRushFILE) 
-				logging.debug('self.hasDoneFILE :  %s', self.hasDoneFILE) 
-				logging.debug('self.hasDoneFILE :  %s', self.hasDoneFILE) 
-				logging.debug('self.hasNewFILE :  %s', self.hasNewFILE) 
 
-									
-				# Clean THM
-				if (self.hasthmFILE):
-					print ("\nTASK : " + colored("Cleaning THM "+ self.thmFILE[0], 'green'))
-					logging.info('Cleaning THM %s', self.thmFILE[0]) 
-					for entry in self.thmFILE:
-						os.remove(entry)
 
-				# BACKUP
-				if (self.hasCameraFILE):
-					self.hadThings	 	= True;
-					print ("\nTASK : " + colored("Backuping camera "+ self.cameraFILE[0], 'green'))
-					logging.info('Backuping camera %s', self.cameraFILE[0]) 
-					self.backupCamera(self.cameraFILE[0])
-
-				# UPLOAD NEW
-				elif (self.hasCameraFILE == False and self.hasNewFILE == True):
-					print ("\nTASK : " + colored("Upload report", 'green'))
-					logging.info('Uploading repport %s', self.newFILE[0]) 
-					self.uploadREPORT(self.newFILE[0],self.remote_PATH+"NEW/")
 
 				# SEEK BLACK FRAME
-				elif (self.hasCameraFILE == False and  self.hasRushFILE == True ):
+				if (self.hasRushFILE == True ):
 					print ("\nTASK : " + colored("Seek black frame", 'green'))
 					logging.info('Seek black frame') 
 					vid = self.rushFILE[0];
@@ -169,27 +120,19 @@ class PiPyDASH():
 					print("dest", str(dest));
 					shutil.move(vid,dest)
 
-
-				# UPLOAD RUSH
-				elif (self.hasCameraFILE == False and  self.hasRushFILE == False and  self.hasNewFILE == False and  self.hasDoneFILE == True):
-					logging.info('Uploading rush  %s', self.doneFILE[0]) 
-					print ("\nTASK : " + colored("Uploading rush", 'green'))
-					self.uploadRUSH(self.doneFILE[0],self.remote_PATH+"RUSH/")
-
 				else:
 					if(self.hadThings):
 						self.hadThings	 	= False;
-						print ("\nTASK : " + colored("Waiting for camera", 'green'))
-						logging.info('Waiting for camera') 
-						self.pushLog("TASK Waiting for camera","Raspberry is waiting fo a camera to be connected")
+						print ("\nTASK : " + colored("Waiting for RUSH", 'green'))
+						self.pushLog("Waiting for RUSH","Waiting for RUSH")
 
 		except KeyboardInterrupt:
 			print(colored("\nExiting by user request.", 'magenta'))
-		except:
-			e = sys.exc_info()
-			self.pushLog("DASH AGENT FAIL", str(e),"siren")
-			print(colored("\nDASH AGENT FAIL.", 'magenta'))
-			sys.exit(0)
+		# except:
+		# 	e = sys.exc_info()
+		# 	self.pushLog("DASH AGENT FAIL", str(e),"siren")
+		# 	print(colored("\nDASH AGENT FAIL.", 'magenta'))
+		# 	sys.exit(0)
 
 
 
@@ -223,99 +166,6 @@ class PiPyDASH():
 	        return viewBar2, pbar  # return callback, tqdmInstance
 
 
-
-	def backupCamera(_self,source):
-		print("backupCamera")
-	
-		# If the same file allready is this should be a previous fail copy
-		dest = os.path.basename(source)
-		file_allready_there = _self.folder_RUSH+dest
-		if(os.path.isfile(file_allready_there)):
-			print("BACKUP file allready exist deleting it: "+ colored(file_allready_there, "red"))
-			_self.pushLog("Backup allready there, removing ", dest)
-			os.remove(file_allready_there)
-		
-		filename = ntpath.basename(source)
-		print("\nBackuping CAMERA :	" + colored(source, 'magenta'))
-		_self.pushLog("Backuping CAMERA", filename)
-
-		try:
-			shutil.move(source,_self.folder_RUSH)
-		except shutil.Error as e:
-			print("unable to backup :	" + colored(source, 'white',  'on_red'))
-			print(colored(e, 'white',  'on_red'))
-			print("waiting:	" + colored(str(_self.failetimeout)+" seconds\n", 'magenta'))
-			_self.pushLog("FAIL Backuping camera" + filename,str(e) ,"siren")
-			time.sleep(_self.failetimeout)
-
-
-
-
-
-
-	def uploadRUSH(_self,source,remote_PATH):
-
-		dest = os.path.basename(source)
-		filename = ntpath.basename(source)
-		print("\nUploading RUSH : " + colored(source + " -> "+ remote_PATH, 'white',  'on_blue'))
-		_self.pushLog("Uploading RUSH", filename)
-		try:
-			transport = paramiko.Transport((host, port))
-			transport.connect(username = username, password = password)
-			sftp = paramiko.SFTPClient.from_transport(transport)
-			path = remote_PATH + dest 
-			localpath = source
-			cbk, pbar = _self.tqdmWrapViewBar(ascii=True, unit='b', unit_scale=True)
-			sftp.put(localpath, path,callback=cbk)
-			sftp.close()
-			transport.close()
-			pbar.close()
-
-			os.remove(source)
-
-
-			_self.po.send_message("upload RUSH done: " + dest, title="Upload done:"+dest,sound="bike")
-			
-		except:
-			e = sys.exc_info()
-			print("unable to backup :	" + colored(source, 'white',  'on_red'))
-			print(colored(e, 'white',  'on_red'))
-			print("waiting:	" + colored(str(_self.failetimeout)+" seconds\n", 'magenta'))
-			_self.pushLog("FAIL Uploading RUSH "+filename, str(e) ,"siren")
-			time.sleep(_self.failetimeout)
-
-	def uploadREPORT(_self,source,remote_PATH):
-
-		dest = os.path.basename(source)
-		filename = ntpath.basename(source)
-		_self.pushLog("Uploading REPORT", filename)
-		print("\nUploading file : " + colored(source + " -> "+ remote_PATH, 'white',  'on_blue'))
-		try:
-			transport = paramiko.Transport((host, port))
-			transport.connect(username = username, password = password)
-			sftp = paramiko.SFTPClient.from_transport(transport)
-			path = remote_PATH + dest 
-			localpath = source
-			cbk, pbar = _self.tqdmWrapViewBar(ascii=True, unit='b', unit_scale=True)
-			sftp.put(localpath, path,callback=cbk)
-			sftp.close()
-			transport.close()
-			pbar.close()
-
-			
-			os.remove(source)
-
-
-			_self.po.send_message("upload REPORT done: " + dest, title="Upload done:"+dest,sound="bike")
-			
-		except:
-			e = sys.exc_info()
-			_self.po.send_message(e, title="unable to upload :	"+source,sound="bike")
-			print("unable to backup :	" + colored(source, 'white',  'on_red'))
-			print(colored(e, 'white',  'on_red'))
-			print("waiting:	" + colored(str(_self.failetimeout)+" seconds\n", 'magenta'))
-			_self.pushLog("FAIL Uploading REPORT "+filename, str(e) ,"siren")
-			time.sleep(_self.failetimeout)
 
 
 
