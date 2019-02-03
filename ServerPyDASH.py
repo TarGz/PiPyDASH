@@ -78,7 +78,7 @@ class PiPyDASH():
 
 
 
-		print("PiPyDASH 	: " + colored(version, 'magenta'))
+		print("SERVER PiPyDASH 	: " + colored(version, 'magenta'))
 		print("folder_RUSH 	: " + colored(self.folder_RUSH, 'magenta'))
 		print("folder_DONE 	: " + colored(self.folder_DONE, 'magenta'))
 		print("folder_NEW 	: " + colored(self.folder_NEW, 'magenta'))
@@ -105,12 +105,27 @@ class PiPyDASH():
 
 
 
-
-				# SEEK BLACK FRAME
+				# SEEK BLACK FRAME 2
 				if (self.hasRushFILE == True ):
 					print ("\nTASK : " + colored("Seek black frame", 'green'))
 					logging.info('Seek black frame') 
 					vid = self.rushFILE[0];
+
+
+					spinner = Spinner('Waiting file finish uploading... ')
+					while True :
+						filesize = os.path.getsize(vid)
+						for x in range(0, 10):
+							spinner.next()
+							time.sleep(1)
+
+						filesize2 = os.path.getsize(vid)
+						if(filesize==filesize2):
+							break
+
+
+
+
 					file = os.path.basename(vid)
 					videoID, file_extension = os.path.splitext(file)
 					report = self.seekBlackFrame(vid)
@@ -119,6 +134,7 @@ class PiPyDASH():
 					dest = self.folder_DONE+videoID+"-"+report+file_extension
 					print("dest", str(dest));
 					shutil.move(vid,dest)
+
 
 				else:
 					if(self.hadThings):
@@ -137,7 +153,7 @@ class PiPyDASH():
 
 
 	def pushLog(_self,title,message,s="bike"):
-		_self.po.send_message( message + " at " +  str(datetime.datetime.now()), title=title,sound=s)
+		_self.po.send_message( "SERVER " + message + " at " +  str(datetime.datetime.now()), title=title,sound=s)
 
 
 	def viewBar(_self,a,b):
